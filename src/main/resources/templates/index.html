@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h2> Welcome!</h2>
+
+<p>Messages:
+<table border=1>
+    <#list messages as msg>
+        <tr>
+            <td>${msg.author}
+            <td>${msg.text}
+    </#list>
+</table>
+
+<#if emptyFieldExist == true>
+    <h3 style="color:darkred"> Please, fill all fields.<h3>
+</#if>
+
+<form action="/form" method="POST">
+    Enter your name:
+    <p>
+        <input name="name"/>
+    </p>
+    Enter your message:
+    <p>
+        <textarea name="message" cols="40" rows="3"></textarea>
+    </p>
+    <button type="submit" title="Send">Send</button>
+</form>
+</body>
+</html>
