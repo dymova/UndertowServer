@@ -36,7 +36,7 @@ public class FormHandler implements HttpHandler {
         if (name.isEmpty() || message.isEmpty()) {
             templateData.put("emptyFieldExist", true);
         } else {
-            server.saveMessage(new Message(name, message));
+            server.saveMessage(new Message(name, message, server.getNextMessageId()));
             templateData.put("emptyFieldExist", false);
         }
 

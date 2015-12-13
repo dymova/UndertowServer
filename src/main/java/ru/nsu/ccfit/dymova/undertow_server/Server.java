@@ -7,14 +7,16 @@ import freemarker.template.TemplateExceptionHandler;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
 import io.undertow.server.handlers.form.EagerFormParsingHandler;
-import io.undertow.server.handlers.resource.ClassPathResourceManager;
-import io.undertow.server.handlers.resource.ResourceHandler;
+import org.simpleframework.xml.core.Persister;
 import ru.nsu.ccfit.dymova.undertow_server.handlers.FormHandler;
 import ru.nsu.ccfit.dymova.undertow_server.handlers.IndexPageHandler;
 import ru.nsu.ccfit.dymova.undertow_server.handlers.MessagesRequestHandler;
+import ru.nsu.ccfit.dymova.undertow_server.handlers.UpdateHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class Server implements Runnable{
@@ -23,6 +25,8 @@ public class Server implements Runnable{
     private final String host;
     private final Template indexTemplate;
     private final ArrayList<Message> messages;
+    private static Persister serializer;
+    private int nextMessageId = 0;
 
     public Server(int port, String host) throws IOException {
         this.port = port;
@@ -36,6 +40,8 @@ public class Server implements Runnable{
 
 
         messages = new ArrayList<Message>();
+
+        serializer = new Persister();
     }
 
     public static void main(final String[] args) throws IOException {
@@ -55,7 +61,8 @@ public class Server implements Runnable{
 //                        .addPrefixPath("/", new ResourceHandler(new ClassPathResourceManager(Server.class.getClassLoader(), "templates")))
                         .addPrefixPath("/", new IndexPageHandler(indexTemplate, this))
                         .addPrefixPath("/form", new EagerFormParsingHandler().setNext(new FormHandler(indexTemplate, this)))
-                        .addPrefixPath("/api/messages", new MessagesRequestHandler())
+                        .addPrefixPath("/api/message", new MessagesRequestHandler(serializer, this))
+                        .addPrefixPath("/api/update", new UpdateHandler(serializer, this))
                 ).build();
 
         server.start();
@@ -67,5 +74,20 @@ public class Server implements Runnable{
 
     public ArrayList<Message> getMessages() {
         return messages;
+    }
+
+    public UpdateResponseMessage getNewMessage(final Integer lastId) {
+        List<Message> newMessages =  messages.stream()
+                .filter(message -> message.getId() > lastId)
+                .collect(Collectors.toList());
+
+        return new UpdateResponseMessage(newMessages);
+
+    }
+
+    public int getNextMessageId() {
+        int oldMessageId = nextMessageId;
+        nextMessageId++;
+        return oldMessageId;
     }
 }
